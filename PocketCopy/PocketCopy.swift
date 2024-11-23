@@ -11,7 +11,7 @@ import SwiftUI
 struct PocketCopyApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            CopyTextView()
         }
     }
 }
