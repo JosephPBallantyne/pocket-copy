@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		5849EA242D3D945600261DFC /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 5849EA232D3D945600261DFC /* KeyboardShortcuts */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		58D145452CBF0F8400D35D15 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5849EA242D3D945600261DFC /* KeyboardShortcuts in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +117,7 @@
 			);
 			name = PocketCopy;
 			packageProductDependencies = (
+				5849EA232D3D945600261DFC /* KeyboardShortcuts */,
 			);
 			productName = PocketCopy;
 			productReference = 58D145332CBF0F8300D35D15 /* PocketCopy.app */;
@@ -195,6 +201,9 @@
 			);
 			mainGroup = 58D1452A2CBF0F8300D35D15;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				5849EA222D3D945600261DFC /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 58D145342CBF0F8300D35D15 /* Products */;
 			projectDirPath = "";
@@ -549,6 +558,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		5849EA222D3D945600261DFC /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.2.4;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		5849EA232D3D945600261DFC /* KeyboardShortcuts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5849EA222D3D945600261DFC /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
+			productName = KeyboardShortcuts;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 58D1452B2CBF0F8300D35D15 /* Project object */;
 }

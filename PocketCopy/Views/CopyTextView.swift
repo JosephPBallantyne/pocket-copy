@@ -1,4 +1,5 @@
 import AppKit
+import KeyboardShortcuts
 import SwiftUI
 
 struct TableItem: Identifiable {
@@ -20,15 +21,22 @@ struct CopyTextView: View {
     @State private var monitor: Any?
     @State private var currentIndex = 0
     @State private var lastPasteText: String? = nil
-    
+
     var indexedItems: [IndexedTableItem] {
         tableItems.enumerated().map { index, item in
             IndexedTableItem(index: index, item: item)
         }
     }
-    
+
     var body: some View {
         VStack(spacing: 8) {
+            Form {
+                KeyboardShortcuts.Recorder(
+                    "Toggle enabled state", name: .toggleEnabled)
+                KeyboardShortcuts.Recorder(
+                    "cyclePasteRecent", name: .cyclePasteRecent)
+
+            }
             Text("Copy history:")
             ForEach(copyHistory, id: \.self) { item in
                 Text(item)
@@ -43,65 +51,66 @@ struct CopyTextView: View {
             }
         }
         .onAppear {
-            //            startClipboardPolling()
             startGlobalKeyMonitoring()
+            startKeyboardShortcutsMonitoring()
         }
         .onDisappear {
             timer?.invalidate()
             stopGlobalKeyMonitoring()
         }
         .frame(width: 500)
-        VStack() {
-        }.frame( maxHeight: .infinity) // Expand to fill available space
+        VStack {
+        }.frame(maxHeight: .infinity)  // Expand to fill available space
     }
-    
-    //    private func updateCopyHistory() {
-    //        if let text = NSPasteboard.general.string(forType: .string) {
-    //            if !copyHistory.contains(text) && !text.isEmpty {
-    //                copyHistory.insert(text, at: 0)
-    //                if copyHistory.count > 5 {
-    //                    copyHistory.removeLast()
-    //                }
-    //            }
-    //        }
-    //    }
-    
+
+    private func startKeyboardShortcutsMonitoring() {
+        KeyboardShortcuts.onKeyUp(for: .toggleEnabled) {
+            let _ = print("start toggleEnabled!")
+
+        }
+
+        KeyboardShortcuts.onKeyDown(for: .cyclePasteRecent) {
+            cycleItemsAndPaste()
+        }
+    }
+
     private func startGlobalKeyMonitoring() {
         let _ = print("start GlobalKeyMonitoring!")
         NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { event in
             checkClipboard(event: event)
         }
-        
+
         NSEvent.addGlobalMonitorForEvents(matching: .leftMouseDown) { event in
             checkClipboard(event: event)
+            lastPasteText = nil
+            currentIndex = 0
         }
-        
-        monitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) {
-            event in
-            //            handleGlobalKeyEvent(event: event)
-            handleGlobalKeyEvent(event: event)
-        }
+
+        //        monitor = NSEvent.addGlobalMonitorForEvents(matching: .keyUp) {
+        //            event in
+        //            handleGlobalKeyEvent(event: event)
+        //        }
     }
-    
+
     private func stopGlobalKeyMonitoring() {
         if let monitor = monitor {
             let _ = print("stop GlobalKeyMonitoring!")
             NSEvent.removeMonitor(monitor)
         }
     }
-    
+
     private func checkClipboard(event: NSEvent) {
         if event.type == .keyDown || event.type == .leftMouseDown {
             updateCopyHistoryItems()
         }
     }
-    
+
     private func updateCopyHistoryItems() {
         if let text = NSPasteboard.general.string(forType: .string) {
             let trimmedText = text.trimmingCharacters(
                 in: .whitespacesAndNewlines)
             let textExists = tableItems.contains { $0.text == trimmedText }
-            
+
             if textExists || trimmedText.isEmpty {
                 return
             }
@@ -116,188 +125,144 @@ struct CopyTextView: View {
             }
         }
     }
-    
+
     //    private func handleGlobalKeyEvent(event: NSEvent) {
-    //        let controlPressed = event.modifierFlags.contains(.control)
-    //        let optionPressed = event.modifierFlags.contains(.option)
-    //
-    //        guard controlPressed && optionPressed else { return }
-    //
-    //        // Match the key code for numbers 1-5
-    //        switch event.keyCode {
-    //        case 18:  // Key 1
-    //            pasteItem(at: 0)
-    //        case 19:  // Key 2
-    //            pasteItem(at: 1)
-    //        case 20:  // Key 3
-    //            pasteItem(at: 2)
-    //        case 21:  // Key 4
-    //            pasteItem(at: 3)
-    //        case 23:  // Key 5
-    //            pasteItem(at: 4)
-    //        default:
-    //            break
+    //        if event.modifierFlags.contains([.option, .control]) && event.charactersIgnoringModifiers == "v"  {
+    //            cycleItemsAndPaste()
     //        }
     //    }
-    //
-    //    private func pasteItem(at index: Int) {
-    //        guard index < tableItems.count else { return }
-    //
-    //        // Set clipboard content
-    //        let text = tableItems[index].text
-    //        NSPasteboard.general.clearContents()
-    //        NSPasteboard.general.setString(text, forType: .string)
-    //
-    //        // Simulate Command + V (paste)
-    //        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-    //            let pasteEvent = CGEvent(
-    //                keyboardEventSource: nil, virtualKey: 9, keyDown: true)  // 'V'
-    //            pasteEvent?.flags = .maskCommand
-    //            pasteEvent?.post(tap: .cghidEventTap)
-    //        }
-    //    }
-    
-    private func handleGlobalKeyEvent(event: NSEvent) {
-        // Detect Option + Command + V
-        if event.modifierFlags.contains([.option, .control]) && event.charactersIgnoringModifiers == "v" {
-            cycleItemsAndPaste()
-        }
-    }
-    
+
     private func cycleItemsAndPaste() {
-        // Get the current item
+        let _ = print("cycluing")
         let currentItem = tableItems[currentIndex]
-        let _ = print(lastPasteText)
         if let lastPasteText = lastPasteText, !lastPasteText.isEmpty {
-            simulateDeleteChar(lastPasteText.count)
-//            selectPreviousCharacters(lastPasteText.count)
-            
+//            simulateDeleteChar(lastPasteText.count)
+            selectPreviousCharacters(lastPasteText)
         }
 
-        // Update the pasteboard
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(currentItem.text, forType: .string)
-        
-        // Automatically paste the item in the active app
+
         simulatePaste()
-        
         lastPasteText = currentItem.text
-        
-        
-        // Advance to the next item, looping back if necessary
         currentIndex = (currentIndex + 1) % tableItems.count
         
-        
     }
-    
+
     private func simulatePaste() {
-        // Simulate a Command + V key press to paste in the active app
         let source = CGEventSource(stateID: .combinedSessionState)
-        
-        let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 9, keyDown: true) // 'V' key
-        let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 9, keyDown: false) // 'V' key
 
-        let cmdDown = CGEvent(keyboardEventSource: nil, virtualKey: 55, keyDown: true)
-        let cmdUp = CGEvent(keyboardEventSource: nil, virtualKey: 55, keyDown: false)
-        
-        
-        keyDown?.flags = .maskCommand
-        
+        let keyVDown = CGEvent(
+            keyboardEventSource: source, virtualKey: 9, keyDown: true)
+        let keyVUp = CGEvent(
+            keyboardEventSource: source, virtualKey: 9, keyDown: false)
+        let cmdDown = CGEvent(
+            keyboardEventSource: nil, virtualKey: 55, keyDown: true)
+        let cmdUp = CGEvent(
+            keyboardEventSource: nil, virtualKey: 55, keyDown: false)
+
+        keyVDown?.flags = .maskCommand
         cmdDown?.post(tap: .cghidEventTap)
-        keyDown?.post(tap: .cghidEventTap)
-        
-        keyUp?.flags = .maskCommand
-        
+        keyVDown?.post(tap: .cghidEventTap)
+
+        keyVUp?.flags = .maskCommand
         cmdUp?.post(tap: .cghidEventTap)
-        keyUp?.post(tap: .cghidEventTap)
+        keyVUp?.post(tap: .cghidEventTap)
     }
-    
-    // todo calculate presses to delete
-    func analyzeString(_ input: String) -> (firstWordLength: Int, lastWordLength: Int, wordCount: Int) {
-        // Split the string into words using whitespace as a delimiter
+
+    func analyzeString(_ input: String) -> (
+        firstWordLength: Int, additionalWordCount: Int
+    ) {
         let words = input.split(separator: " ")
-        
-        // Get the length of the first word, if it exists
         let firstWordLength = words.first?.count ?? 0
+        var additionalWordCount = 0
         
-        // Get the length of the last word, if it exists
-        let lastWordLength = words.last?.count ?? 0
-        
-        // Count the number of words
-        let wordCount = words.count
-        
-        return (firstWordLength, lastWordLength, wordCount)
+        if (words.count > 1) {
+            additionalWordCount = words.count - 1
+        }
+
+        return (firstWordLength, additionalWordCount)
     }
-    
+
     private func simulateDeleteChar(_ chars: Int) {
-        let _ = print("simulateDeleteCharsimulateDeleteChar")
-        // Simulate the behavior of deleting the last text before pasting the new one
-        // This can be done using backspace to delete one character (or more, depending on text length)
         let source = CGEventSource(stateID: .hidSystemState)
-        
-        let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 51, keyDown: true) // Backspace key
-        let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 51, keyDown: false) // Backspace key
 
-        keyDown?.flags = CGEventFlags(rawValue: 0) // No modifiers
-        keyUp?.flags = CGEventFlags(rawValue: 0) // No modifiers
-        let _ = print("Backspace key events posted successfully!")
+        let keyDown = CGEvent(
+            keyboardEventSource: source, virtualKey: 51, keyDown: true)  // Backspace key
+        let keyUp = CGEvent(
+            keyboardEventSource: source, virtualKey: 51, keyDown: false)  // Backspace key
 
+        keyDown?.flags = CGEventFlags(rawValue: 0)  // No modifiers
+        keyUp?.flags = CGEventFlags(rawValue: 0)  // No modifiers
 
-//        let ctrlDown = CGEvent(keyboardEventSource: nil, virtualKey: 59, keyDown: true)
-//        let ctrlUp = CGEvent(keyboardEventSource: nil, virtualKey: 59, keyDown: false)
-        
-//                let optionDown = CGEvent(keyboardEventSource: nil, virtualKey: 58, keyDown: true)
-//                let optionUp = CGEvent(keyboardEventSource: nil, virtualKey: 58, keyDown: false)
-//        optionDown?.post(tap: .cghidEventTap)
-//        keyDown?.flags = .maskAlternate
-//        keyUp?.flags = .maskAlternate
-        
-//        keyDown?.flags = .maskControl
-//        keyUp?.flags = .maskControl
-//        ctrlDown?.post(tap: .cghidEventTap)
-
-        for a in 0..<chars {
-            let _ = print(a)
-
+        for _ in 0..<chars {
             keyDown?.post(tap: .cghidEventTap)
             keyUp?.post(tap: .cghidEventTap)
+
         }
-//        ctrlUp?.post(tap: .cghidEventTap)
-//        optionUp?.post(tap: .cghidEventTap)
 
     }
-    
-    private func selectPreviousCharacters(_ count: Int) {
+
+    private func selectPreviousCharacters(_ prevWord: String) {
         let source = CGEventSource(stateID: .combinedSessionState)
+        let (firstWordLength, additionalWordCount) = analyzeString(prevWord)
+        let _ = print(firstWordLength)
+        let _ = print(additionalWordCount)
+//        guard
+            let shiftDown = CGEvent(
+                keyboardEventSource: source, virtualKey: 56, keyDown: true)
+//        else { return }  // Shift key down
+//        guard
+            let shiftUp = CGEvent(
+                keyboardEventSource: source, virtualKey: 56, keyDown: false)
+//        else { return }  // Shift key up
+
+        let optionDown = CGEvent(
+            keyboardEventSource: source, virtualKey: 58, keyDown: true)
+        let optionUp = CGEvent(
+            keyboardEventSource: source, virtualKey: 58, keyDown: false)
         
-        guard let shiftDown = CGEvent(keyboardEventSource: source, virtualKey: 56, keyDown: true) else { return } // Shift key down
-        guard let shiftUp = CGEvent(keyboardEventSource: source, virtualKey: 56, keyDown: false) else { return } // Shift key up
+        let leftArrowDown = CGEvent(
+            keyboardEventSource: source, virtualKey: 123, keyDown: true)
+        let leftArrowUp = CGEvent(
+            keyboardEventSource: source, virtualKey: 123, keyDown: false)
         
-        // Press and hold the Shift key
-        shiftDown.post(tap: .cghidEventTap)
+        let backspaceDown = CGEvent(
+            keyboardEventSource: source, virtualKey: 51, keyDown: true)
+        let backspaceUp = CGEvent(
+            keyboardEventSource: source, virtualKey: 51, keyDown: false)
         
-        for _ in 0..<count {
-            // Simulate Left Arrow key press and release immediately
-            CGEvent(keyboardEventSource: source, virtualKey: 123, keyDown: true)?.post(tap: .cghidEventTap)  // Left Arrow key down
-            CGEvent(keyboardEventSource: source, virtualKey: 123, keyDown: false)?.post(tap: .cghidEventTap) // Left Arrow key up
+        shiftDown?.flags = CGEventFlags(rawValue: 0)
+        shiftUp?.flags = CGEventFlags(rawValue: 0)
+        
+
+        shiftDown?.post(tap: .cghidEventTap)
+        optionDown?.post(tap: .cghidEventTap)
+        
+        leftArrowDown?.flags = [.maskShift, .maskAlternate]
+        leftArrowUp?.flags = [.maskShift, .maskAlternate]
+        
+        for _ in 0..<additionalWordCount {
+            leftArrowDown?.post(tap: .cghidEventTap)
+            leftArrowUp?.post(tap: .cghidEventTap)
         }
+        optionUp?.post(tap: .cghidEventTap)
+
+        for _ in 0..<firstWordLength+1 {
+            leftArrowDown?.post(tap: .cghidEventTap)
+            leftArrowUp?.post(tap: .cghidEventTap)
+        }
+        shiftUp?.post(tap: .cghidEventTap)
         
-        // Release the Shift key
-        shiftUp.post(tap: .cghidEventTap)
+        backspaceDown?.flags = CGEventFlags(rawValue: 0)
+        backspaceUp?.flags = CGEventFlags(rawValue: 0)
+        
+        backspaceDown?.post(tap: .cghidEventTap)
+        backspaceUp?.post(tap: .cghidEventTap)
     }
-    
-    
-    //    private func startClipboardPolling() {
-    //        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) {
-    //            _ in updateCopyHistoryItems()
-    //
-    //        }
-    //    }
-    
 }
 
 #Preview {
     CopyTextView()
 }
-
