@@ -21,6 +21,7 @@ struct CopyTextView: View {
     @State private var monitor: Any?
     @State private var currentIndex = 0
     @State private var lastPasteText: String? = nil
+    @State private var save1: String? = "initial save text"
 
     var indexedItems: [IndexedTableItem] {
         tableItems.enumerated().map { index, item in
@@ -30,25 +31,29 @@ struct CopyTextView: View {
 
     var body: some View {
         VStack(spacing: 8) {
+
+            Text("Cycle through your most recent copied items")
             Form {
                 KeyboardShortcuts.Recorder(
-                    "Toggle enabled state", name: .toggleEnabled)
-                KeyboardShortcuts.Recorder(
-                    "cyclePasteRecent", name: .cyclePasteRecent)
-
+                    "Command: ", name: .cyclePasteRecent)
             }
-            Text("Copy history:")
             ForEach(copyHistory, id: \.self) { item in
                 Text(item)
             }
             Table(indexedItems) {
-                TableColumn("Copied text") { indexedItem in
+                TableColumn("") { indexedItem in
+                    Text("\(indexedItem.index + 1)")
+                }
+                TableColumn("Text") { indexedItem in
                     Text(indexedItem.item.text)
                 }
-                TableColumn("Paste command") { indexedItem in
-                    Text("ctrl + option + cmd + \(indexedItem.index + 1)")
-                }
             }
+            Form {
+                KeyboardShortcuts.Recorder(
+                    "Copy 1: ", name: .copy1);
+                KeyboardShortcuts.Recorder( "Paste 1: ", name: .paste1);
+            }
+            Text(save1 ?? "")
         }
         .onAppear {
             startGlobalKeyMonitoring()
@@ -64,13 +69,29 @@ struct CopyTextView: View {
     }
 
     private func startKeyboardShortcutsMonitoring() {
-        KeyboardShortcuts.onKeyUp(for: .toggleEnabled) {
-            let _ = print("start toggleEnabled!")
-
-        }
-
         KeyboardShortcuts.onKeyDown(for: .cyclePasteRecent) {
             cycleItemsAndPaste()
+        }
+        
+        KeyboardShortcuts.onKeyDown(for: .copy1) {
+            if let text = NSPasteboard.general.string(forType: .string) {
+                let trimmedText = text.trimmingCharacters(
+                    in: .whitespacesAndNewlines)
+
+                if trimmedText.isEmpty {
+                    return
+                }
+                
+                save1 = trimmedText
+            }
+        }
+        
+        KeyboardShortcuts.onKeyDown(for: .paste1) {
+            let pasteboard = NSPasteboard.general
+            pasteboard.clearContents()
+            pasteboard.setString(save1 ?? "", forType: .string)
+
+            simulatePaste()
         }
     }
 
