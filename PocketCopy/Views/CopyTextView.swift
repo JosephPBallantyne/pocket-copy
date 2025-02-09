@@ -5,7 +5,7 @@ import SwiftUI
 struct TableItem: Identifiable {
     let id = UUID()
     let text: String
-    let creationDate: Date
+    let createdAt: Date
 }
 
 struct IndexedTableItem: Identifiable {
@@ -16,31 +16,38 @@ struct IndexedTableItem: Identifiable {
 
 struct CopyTextView: View {
     @State private var copyHistory: [String] = []
-    @State private var timer: Timer?
-    @State private var tableItems: [TableItem] = []
+    @State private var historyItems: [TableItem] = []
+    @State private var favoriteItemsIndexed: [IndexedTableItem] = []
     @State private var monitor: Any?
     @State private var currentIndex = 0
     @State private var lastPasteText: String? = nil
-    @State private var save1: String? = "initial save text"
+    @State private var maxFavorites: Int = 5
+    @StateObject private var highlightTextManager = HighlightTextManager()
 
-    var indexedItems: [IndexedTableItem] {
-        tableItems.enumerated().map { index, item in
+    var historyItemsIndexed: [IndexedTableItem] {
+        historyItems.enumerated().map { index, item in
             IndexedTableItem(index: index, item: item)
         }
     }
 
+    //    var favoriteItemsTable: [IndexedTableItem] {
+    //        favoriteItems.enumerated().map { index, item in
+    //            IndexedTableItem(index: index, item: item)
+    //        }
+    //    }
+
     var body: some View {
         VStack(spacing: 8) {
 
-            Text("Cycle through your most recent copied items")
             Form {
                 KeyboardShortcuts.Recorder(
-                    "Command: ", name: .cyclePasteRecent)
+                    "Cycle through recent copy history: ",
+                    name: .cyclePasteRecent)
             }
             ForEach(copyHistory, id: \.self) { item in
                 Text(item)
             }
-            Table(indexedItems) {
+            Table(historyItemsIndexed) {
                 TableColumn("") { indexedItem in
                     Text("\(indexedItem.index + 1)")
                 }
@@ -48,22 +55,34 @@ struct CopyTextView: View {
                     Text(indexedItem.item.text)
                 }
             }
+            .frame(width: 550)
             Form {
                 KeyboardShortcuts.Recorder(
-                    "Copy 1: ", name: .copy1);
-                KeyboardShortcuts.Recorder( "Paste 1: ", name: .paste1);
+                    "Cycle through favorites: ", name: .cyclePasteFavorites)
+                KeyboardShortcuts.Recorder(
+                    "Save favorite 1: ", name: .faveCopy1)
+                KeyboardShortcuts.Recorder(
+                    "Save favorite 2: ", name: .faveCopy2)
             }
-            Text(save1 ?? "")
+            Table(favoriteItemsIndexed) {
+                TableColumn("") { indexedItem in
+                    Text("\(indexedItem.index)")
+                }
+                TableColumn("Text") { indexedItem in
+                    Text(indexedItem.item.text)
+                }
+            }
+            .frame(width: 550)
+            Text(lastPasteText ?? "")
         }
         .onAppear {
             startGlobalKeyMonitoring()
             startKeyboardShortcutsMonitoring()
         }
         .onDisappear {
-            timer?.invalidate()
             stopGlobalKeyMonitoring()
         }
-        .frame(width: 500)
+        //        .frame(width: 500)
         VStack {
         }.frame(maxHeight: .infinity)  // Expand to fill available space
     }
@@ -72,26 +91,25 @@ struct CopyTextView: View {
         KeyboardShortcuts.onKeyDown(for: .cyclePasteRecent) {
             cycleItemsAndPaste()
         }
-        
-        KeyboardShortcuts.onKeyDown(for: .copy1) {
-            if let text = NSPasteboard.general.string(forType: .string) {
-                let trimmedText = text.trimmingCharacters(
-                    in: .whitespacesAndNewlines)
 
-                if trimmedText.isEmpty {
-                    return
-                }
-                
-                save1 = trimmedText
-            }
+        KeyboardShortcuts.onKeyDown(for: .faveCopy1) {
+            saveToFavorites(index: 1)
         }
-        
-        KeyboardShortcuts.onKeyDown(for: .paste1) {
-            let pasteboard = NSPasteboard.general
-            pasteboard.clearContents()
-            pasteboard.setString(save1 ?? "", forType: .string)
+        KeyboardShortcuts.onKeyDown(for: .faveCopy2) {
+            saveToFavorites(index: 2)
+        }
+        KeyboardShortcuts.onKeyDown(for: .faveCopy3) {
+            saveToFavorites(index: 3)
+        }
+        KeyboardShortcuts.onKeyDown(for: .faveCopy4) {
+            saveToFavorites(index: 4)
+        }
+        KeyboardShortcuts.onKeyDown(for: .faveCopy5) {
+            saveToFavorites(index: 5)
+        }
 
-            simulatePaste()
+        KeyboardShortcuts.onKeyDown(for: .cyclePasteFavorites) {
+
         }
     }
 
@@ -106,11 +124,6 @@ struct CopyTextView: View {
             lastPasteText = nil
             currentIndex = 0
         }
-
-        //        monitor = NSEvent.addGlobalMonitorForEvents(matching: .keyUp) {
-        //            event in
-        //            handleGlobalKeyEvent(event: event)
-        //        }
     }
 
     private func stopGlobalKeyMonitoring() {
@@ -130,35 +143,73 @@ struct CopyTextView: View {
         if let text = NSPasteboard.general.string(forType: .string) {
             let trimmedText = text.trimmingCharacters(
                 in: .whitespacesAndNewlines)
-            let textExists = tableItems.contains { $0.text == trimmedText }
 
-            if textExists || trimmedText.isEmpty {
+            if trimmedText.isEmpty {
                 return
             }
+
+            let textExists = historyItems.contains { $0.text == trimmedText }
+
+            if textExists {
+                return
+            }
+
             let newItem = TableItem(
                 text: trimmedText,
-                creationDate: Date()
+                createdAt: Date()
             )
-            tableItems.append(newItem)
-            tableItems.sort { $0.creationDate < $1.creationDate }
-            if tableItems.count > 5 {
-                tableItems.removeFirst()
+            historyItems.append(newItem)
+            historyItems.sort { $0.createdAt < $1.createdAt }
+            if historyItems.count > 5 {
+                historyItems.removeFirst()
             }
         }
     }
 
-    //    private func handleGlobalKeyEvent(event: NSEvent) {
-    //        if event.modifierFlags.contains([.option, .control]) && event.charactersIgnoringModifiers == "v"  {
-    //            cycleItemsAndPaste()
-    //        }
-    //    }
+    private func saveToFavorites(index: Int) {
+        let highlightedText = highlightTextManager.highlightedText
+        let trimmedText = highlightedText.trimmingCharacters(
+            in: .whitespacesAndNewlines)
+        let _ = print(highlightedText)
+        let _ = print("highlightedText")
+
+        if trimmedText.isEmpty {
+            return
+        }
+
+        guard index >= 1, index <= maxFavorites else {
+            print("Index out of bounds (1-5 allowed)")
+            return
+        }
+
+        let item = TableItem(
+            text: trimmedText, createdAt: Date()
+        )
+        let favorite = IndexedTableItem(index: index, item: item)
+
+        // Replace if index already exists
+        if let existingIndex = favoriteItemsIndexed.firstIndex(where: {
+            $0.index == index
+        }) {
+            favoriteItemsIndexed[existingIndex] = favorite
+        } else {
+            favoriteItemsIndexed.append(favorite)
+        }
+
+        // Keep sorted by index
+        favoriteItemsIndexed.sort { $0.index < $1.index }
+
+    }
+
+    private func removeFavorite(at index: Int) {
+        favoriteItemsIndexed.removeAll { $0.index == index }
+    }
 
     private func cycleItemsAndPaste() {
-        let _ = print("cycluing")
-        let currentItem = tableItems[currentIndex]
+        let _ = print("cycling")
+        let currentItem = historyItems[currentIndex]
         if let lastPasteText = lastPasteText, !lastPasteText.isEmpty {
-//            simulateDeleteChar(lastPasteText.count)
-            selectPreviousCharacters(lastPasteText)
+            smartDeletePrev(lastPasteText)
         }
 
         let pasteboard = NSPasteboard.general
@@ -166,9 +217,11 @@ struct CopyTextView: View {
         pasteboard.setString(currentItem.text, forType: .string)
 
         simulatePaste()
+        let _ = print("lastPasteText  " + (lastPasteText ?? ""))
+
         lastPasteText = currentItem.text
-        currentIndex = (currentIndex + 1) % tableItems.count
-        
+        currentIndex = (currentIndex + 1) % historyItems.count
+
     }
 
     private func simulatePaste() {
@@ -198,87 +251,67 @@ struct CopyTextView: View {
         let words = input.split(separator: " ")
         let firstWordLength = words.first?.count ?? 0
         var additionalWordCount = 0
-        
-        if (words.count > 1) {
+
+        if words.count > 1 {
             additionalWordCount = words.count - 1
         }
 
         return (firstWordLength, additionalWordCount)
     }
 
-    private func simulateDeleteChar(_ chars: Int) {
-        let source = CGEventSource(stateID: .hidSystemState)
-
-        let keyDown = CGEvent(
-            keyboardEventSource: source, virtualKey: 51, keyDown: true)  // Backspace key
-        let keyUp = CGEvent(
-            keyboardEventSource: source, virtualKey: 51, keyDown: false)  // Backspace key
-
-        keyDown?.flags = CGEventFlags(rawValue: 0)  // No modifiers
-        keyUp?.flags = CGEventFlags(rawValue: 0)  // No modifiers
-
-        for _ in 0..<chars {
-            keyDown?.post(tap: .cghidEventTap)
-            keyUp?.post(tap: .cghidEventTap)
-
-        }
-
-    }
-
-    private func selectPreviousCharacters(_ prevWord: String) {
+    private func smartDeletePrev(_ prevWord: String) {
         let source = CGEventSource(stateID: .combinedSessionState)
         let (firstWordLength, additionalWordCount) = analyzeString(prevWord)
         let _ = print(firstWordLength)
         let _ = print(additionalWordCount)
-//        guard
-            let shiftDown = CGEvent(
-                keyboardEventSource: source, virtualKey: 56, keyDown: true)
-//        else { return }  // Shift key down
-//        guard
-            let shiftUp = CGEvent(
-                keyboardEventSource: source, virtualKey: 56, keyDown: false)
-//        else { return }  // Shift key up
+        //        guard
+        let shiftDown = CGEvent(
+            keyboardEventSource: source, virtualKey: 56, keyDown: true)
+        //        else { return }  // Shift key down
+        //        guard
+        let shiftUp = CGEvent(
+            keyboardEventSource: source, virtualKey: 56, keyDown: false)
+        //        else { return }  // Shift key up
 
         let optionDown = CGEvent(
             keyboardEventSource: source, virtualKey: 58, keyDown: true)
         let optionUp = CGEvent(
             keyboardEventSource: source, virtualKey: 58, keyDown: false)
-        
+
         let leftArrowDown = CGEvent(
             keyboardEventSource: source, virtualKey: 123, keyDown: true)
         let leftArrowUp = CGEvent(
             keyboardEventSource: source, virtualKey: 123, keyDown: false)
-        
+
         let backspaceDown = CGEvent(
             keyboardEventSource: source, virtualKey: 51, keyDown: true)
         let backspaceUp = CGEvent(
             keyboardEventSource: source, virtualKey: 51, keyDown: false)
-        
+
         shiftDown?.flags = CGEventFlags(rawValue: 0)
         shiftUp?.flags = CGEventFlags(rawValue: 0)
-        
 
         shiftDown?.post(tap: .cghidEventTap)
         optionDown?.post(tap: .cghidEventTap)
-        
+
         leftArrowDown?.flags = [.maskShift, .maskAlternate]
         leftArrowUp?.flags = [.maskShift, .maskAlternate]
-        
+
         for _ in 0..<additionalWordCount {
             leftArrowDown?.post(tap: .cghidEventTap)
             leftArrowUp?.post(tap: .cghidEventTap)
         }
         optionUp?.post(tap: .cghidEventTap)
 
-        for _ in 0..<firstWordLength+1 {
+        for _ in 0..<firstWordLength + 1 {
             leftArrowDown?.post(tap: .cghidEventTap)
             leftArrowUp?.post(tap: .cghidEventTap)
         }
         shiftUp?.post(tap: .cghidEventTap)
-        
+
         backspaceDown?.flags = CGEventFlags(rawValue: 0)
         backspaceUp?.flags = CGEventFlags(rawValue: 0)
-        
+
         backspaceDown?.post(tap: .cghidEventTap)
         backspaceUp?.post(tap: .cghidEventTap)
     }
