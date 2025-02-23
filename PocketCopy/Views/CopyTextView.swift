@@ -55,7 +55,7 @@ struct CopyTextView: View {
                     Text(indexedItem.item.text)
                 }
             }
-            .frame(width: 550)
+            .frame(width: 500, height: 200)
             Form {
                 KeyboardShortcuts.Recorder(
                     "Cycle through favorites: ", name: .cyclePasteFavorites)
@@ -72,7 +72,7 @@ struct CopyTextView: View {
                     Text(indexedItem.item.text)
                 }
             }
-            .frame(width: 550)
+            .frame(width: 500, height: 200)
             Text(lastPasteText ?? "")
         }
         .onAppear {
@@ -82,7 +82,7 @@ struct CopyTextView: View {
         .onDisappear {
             stopGlobalKeyMonitoring()
         }
-        //        .frame(width: 500)
+//                .frame(width: 500)
         VStack {
         }.frame(maxHeight: .infinity)  // Expand to fill available space
     }
@@ -163,15 +163,17 @@ struct CopyTextView: View {
             if historyItems.count > 5 {
                 historyItems.removeFirst()
             }
+
         }
     }
 
     private func saveToFavorites(index: Int) {
         let highlightedText = highlightTextManager.highlightedText
+        let _ = print("highlightedText")
+        let _ = print(highlightedText)
+
         let trimmedText = highlightedText.trimmingCharacters(
             in: .whitespacesAndNewlines)
-        let _ = print(highlightedText)
-        let _ = print("highlightedText")
 
         if trimmedText.isEmpty {
             return
@@ -206,7 +208,6 @@ struct CopyTextView: View {
     }
 
     private func cycleItemsAndPaste() {
-        let _ = print("cycling")
         let currentItem = historyItems[currentIndex]
         if let lastPasteText = lastPasteText, !lastPasteText.isEmpty {
             smartDeletePrev(lastPasteText)
@@ -217,7 +218,6 @@ struct CopyTextView: View {
         pasteboard.setString(currentItem.text, forType: .string)
 
         simulatePaste()
-        let _ = print("lastPasteText  " + (lastPasteText ?? ""))
 
         lastPasteText = currentItem.text
         currentIndex = (currentIndex + 1) % historyItems.count
@@ -262,16 +262,11 @@ struct CopyTextView: View {
     private func smartDeletePrev(_ prevWord: String) {
         let source = CGEventSource(stateID: .combinedSessionState)
         let (firstWordLength, additionalWordCount) = analyzeString(prevWord)
-        let _ = print(firstWordLength)
-        let _ = print(additionalWordCount)
-        //        guard
+
         let shiftDown = CGEvent(
             keyboardEventSource: source, virtualKey: 56, keyDown: true)
-        //        else { return }  // Shift key down
-        //        guard
         let shiftUp = CGEvent(
             keyboardEventSource: source, virtualKey: 56, keyDown: false)
-        //        else { return }  // Shift key up
 
         let optionDown = CGEvent(
             keyboardEventSource: source, virtualKey: 58, keyDown: true)
@@ -290,7 +285,6 @@ struct CopyTextView: View {
 
         shiftDown?.flags = CGEventFlags(rawValue: 0)
         shiftUp?.flags = CGEventFlags(rawValue: 0)
-
         shiftDown?.post(tap: .cghidEventTap)
         optionDown?.post(tap: .cghidEventTap)
 
@@ -301,17 +295,22 @@ struct CopyTextView: View {
             leftArrowDown?.post(tap: .cghidEventTap)
             leftArrowUp?.post(tap: .cghidEventTap)
         }
+        
         optionUp?.post(tap: .cghidEventTap)
+        leftArrowDown?.flags = [.maskShift]
+        leftArrowUp?.flags = [.maskShift]
 
         for _ in 0..<firstWordLength + 1 {
             leftArrowDown?.post(tap: .cghidEventTap)
             leftArrowUp?.post(tap: .cghidEventTap)
         }
+        
         shiftUp?.post(tap: .cghidEventTap)
-
+        leftArrowDown?.flags = []
+        leftArrowUp?.flags = []
+        
         backspaceDown?.flags = CGEventFlags(rawValue: 0)
         backspaceUp?.flags = CGEventFlags(rawValue: 0)
-
         backspaceDown?.post(tap: .cghidEventTap)
         backspaceUp?.post(tap: .cghidEventTap)
     }
