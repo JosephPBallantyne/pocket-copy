@@ -21,20 +21,52 @@ struct IndexedTableItem: Identifiable {
     var id: UUID { item.id }
 }
 
-struct CopyTextView: View {
-    @State private var copyHistory: [String] = []
-    @State private var historyItems: [TableItem] = []
-    @State private var favoriteItemsIndexed: [IndexedTableItem] = (0...4).map {
+struct ContentView: View {
+    @StateObject private var clipboardManager = ClipboardManager()
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HeaderView()
+
+            ScrollView {
+                VStack(spacing: 24) {
+                    RecentHistory(items: $clipboardManager.historyItems)
+                    Divider()
+                        .padding(.horizontal, 20)
+
+                    Favourites(items: $clipboardManager.favoriteItemsIndexed)
+
+                }
+            }
+            .background(Color(NSColor.windowBackgroundColor))
+        }
+        .onAppear {
+            clipboardManager.startGlobalKeyMonitoring()
+        }
+        .onDisappear {
+            clipboardManager.stopGlobalKeyMonitoring()
+        }
+    }
+}
+
+class ClipboardManager: ObservableObject {
+    @Published var copyHistory: [String] = []
+    @Published var historyItems: [TableItem] = []
+    @Published var favoriteItemsIndexed: [IndexedTableItem] = (0...4).map {
         index in
         IndexedTableItem(
             index: index, item: TableItem(text: "", createdAt: Date()))
     }
-    @State private var monitor: Any?
-    @State private var currentHistoryIndex = 0
-    @State private var currentFaveIndex = 0
-    @State private var lastHistoryPasteText: String? = nil
-    @State private var lastFavePasteText: String? = nil
-    @State private var highlightedText: String = ""
+
+    @Published var monitor: Any?
+    @Published var currentHistoryIndex = 0
+    @Published var currentFaveIndex = 0
+    @Published var lastHistoryPasteText: String? = nil
+    @Published var lastFavePasteText: String? = nil
+
+    init() {
+        startKeyboardShortcutsMonitoring()
+    }
 
     var historyItemsIndexed: [IndexedTableItem] {
         let minCount = 5
@@ -49,107 +81,51 @@ struct CopyTextView: View {
         }
     }
 
-    var body: some View {
-        VStack(spacing: 8) {
-            Form {
-                KeyboardShortcuts.Recorder(
-                    "Cycle through recent history: ",
-                    name: .cyclePasteRecent)
-            }
-            ForEach(copyHistory, id: \.self) { item in
-                Text(item)
-            }
-            Table(historyItemsIndexed) {
-                TableColumn("") { indexedItem in
-                    Text("\(indexedItem.index + 1)")
-                }
-                TableColumn("Text") { indexedItem in
-                    Text(indexedItem.item.text)
-                }
-            }
-            .frame(width: 500, height: 200)
-            Form {
-                KeyboardShortcuts.Recorder(
-                    "Cycle through favorites: ", name: .cyclePasteFavorites)
-                KeyboardShortcuts.Recorder(
-                    "Save favorite 1: ", name: .faveCopy1)
-                KeyboardShortcuts.Recorder(
-                    "Save favorite 2: ", name: .faveCopy2)
-                KeyboardShortcuts.Recorder(
-                    "Save favorite 3: ", name: .faveCopy3)
-                KeyboardShortcuts.Recorder(
-                    "Save favorite 4: ", name: .faveCopy4)
-                KeyboardShortcuts.Recorder(
-                    "Save favorite 5: ", name: .faveCopy5)
-            }
-            Table(favoriteItemsIndexed) {
-                TableColumn("") { indexedItem in
-                    Text("\(indexedItem.index+1)")
-                }
-                TableColumn("Text") { indexedItem in
-                    Text(indexedItem.item.text)
-                }
-            }
-            .frame(width: 500, height: 200)
-            Text(lastHistoryPasteText ?? "")
-            Text(lastFavePasteText ?? "")
+    func startGlobalKeyMonitoring() {
+        let _ = print("start GlobalKeyMonitoring!")
+        NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { event in
+            self.checkClipboard(event: event)
         }
-        .onAppear {
-            startGlobalKeyMonitoring()
-            startKeyboardShortcutsMonitoring()
+
+        NSEvent.addGlobalMonitorForEvents(matching: .leftMouseDown) { event in
+            self.checkClipboard(event: event)
+            self.lastHistoryPasteText = nil
+            self.lastFavePasteText = nil
+            self.currentHistoryIndex = 0
+            self.currentFaveIndex = 0
         }
-        .onDisappear {
-            stopGlobalKeyMonitoring()
+    }
+
+    func stopGlobalKeyMonitoring() {
+        if let monitor = monitor {
+            let _ = print("stop GlobalKeyMonitoring!")
+            NSEvent.removeMonitor(monitor)
         }
-        VStack {
-        }.frame(maxHeight: .infinity)
     }
 
     private func startKeyboardShortcutsMonitoring() {
         KeyboardShortcuts.onKeyDown(for: .cyclePasteRecent) {
-            cycleHistoryItemsAndPaste()
+            self.cycleHistoryItemsAndPaste()
         }
 
         KeyboardShortcuts.onKeyDown(for: .cyclePasteFavorites) {
-            cycleFaveItemsAndPaste()
+            self.cycleFaveItemsAndPaste()
         }
-        
+
         KeyboardShortcuts.onKeyDown(for: .faveCopy1) {
-            saveToFavorites(index: 0)
+            self.saveToFavorites(index: 0)
         }
         KeyboardShortcuts.onKeyDown(for: .faveCopy2) {
-            saveToFavorites(index: 1)
+            self.saveToFavorites(index: 1)
         }
         KeyboardShortcuts.onKeyDown(for: .faveCopy3) {
-            saveToFavorites(index: 2)
+            self.saveToFavorites(index: 2)
         }
         KeyboardShortcuts.onKeyDown(for: .faveCopy4) {
-            saveToFavorites(index: 3)
+            self.saveToFavorites(index: 3)
         }
         KeyboardShortcuts.onKeyDown(for: .faveCopy5) {
-            saveToFavorites(index: 4)
-        }
-    }
-
-    private func startGlobalKeyMonitoring() {
-        let _ = print("start GlobalKeyMonitoring!")
-        NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { event in
-            checkClipboard(event: event)
-        }
-
-        NSEvent.addGlobalMonitorForEvents(matching: .leftMouseDown) { event in
-            checkClipboard(event: event)
-            lastHistoryPasteText = nil
-            lastFavePasteText = nil
-            currentHistoryIndex = 0
-            currentFaveIndex = 0
-        }
-    }
-
-    private func stopGlobalKeyMonitoring() {
-        if let monitor = monitor {
-            let _ = print("stop GlobalKeyMonitoring!")
-            NSEvent.removeMonitor(monitor)
+            self.saveToFavorites(index: 4)
         }
     }
 
@@ -208,7 +184,7 @@ struct CopyTextView: View {
                 )
                 let favorite = IndexedTableItem(index: index, item: item)
 
-                favoriteItemsIndexed[index] = favorite
+                self.favoriteItemsIndexed[index] = favorite
             }
         }
         updateCopyHistoryItems()
@@ -220,6 +196,7 @@ struct CopyTextView: View {
 
     private func cycleHistoryItemsAndPaste() {
         let currentItem = historyItems[currentHistoryIndex]
+
         if let lastHistoryPasteText = lastHistoryPasteText,
             !lastHistoryPasteText.isEmpty
         {
@@ -266,5 +243,5 @@ struct CopyTextView: View {
 }
 
 #Preview {
-    CopyTextView()
+    ContentView()
 }

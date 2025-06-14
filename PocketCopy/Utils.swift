@@ -74,6 +74,8 @@ struct ClipboardUtils {
     }
     
     static func simulateUndo() {
+        
+        let _ = print("simulating undo")
         let source = CGEventSource(stateID: .combinedSessionState)
         
         // Create key events
