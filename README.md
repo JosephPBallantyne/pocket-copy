@@ -1,9 +1,11 @@
-# PocketCopy
+# Pocket Copy
 
 A minimal clipboard manager for macOS that lives in your menu bar.
 
-![Screenshot](screenshot.png)
-
+<p align="center">
+    <img src="screenshot.png" width="600">
+</p>
+                                    
 ## Features
 
 - 📋 Track your last 5 clipboard items
@@ -21,21 +23,21 @@ A minimal clipboard manager for macOS that lives in your menu bar.
 
 ## Usage
 
-### Keyboard Shortcuts
+### Customisable Keyboard Shortcuts
 
-- **Cycle Recent**: ⌘⇧B
-- **Cycle Favorites**: ⌘⇧N
-- **Save to Favorite 1-5**: ⌘⇧1 through ⌘⇧5
+- Cycle Recent
+- Cycle Favorites
+- Save to Favorite 1-5
 
 ### Menu Bar
 
 - Click the clipboard icon in your menu bar
-- Select "Open PocketCopy" to view your clipboard history
+- Select "Open Pocket Copy" to view your clipboard history
 - Select "Quit" to close the app
 
 ## Requirements
 
-- macOS 11.0 or later
+- macOS 13.5 or later
 - Apple Silicon or Intel Mac
 
 ## Building from Source

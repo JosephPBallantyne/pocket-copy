@@ -27,7 +27,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         let menu = NSMenu()
         
-        menu.addItem(NSMenuItem(title: "Open PocketCopy", action: #selector(openApp), keyEquivalent: "o"))
+        menu.addItem(NSMenuItem(title: "Open Pocket Copy", action: #selector(openApp), keyEquivalent: "o"))
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(quitApp), keyEquivalent: "q"))
         
