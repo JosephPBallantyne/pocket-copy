@@ -82,7 +82,6 @@ class ClipboardManager: ObservableObject {
     }
 
     func startGlobalKeyMonitoring() {
-        let _ = print("start GlobalKeyMonitoring!")
         NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { event in
             self.checkClipboard(event: event)
         }
@@ -98,7 +97,6 @@ class ClipboardManager: ObservableObject {
 
     func stopGlobalKeyMonitoring() {
         if let monitor = monitor {
-            let _ = print("stop GlobalKeyMonitoring!")
             NSEvent.removeMonitor(monitor)
         }
     }
@@ -165,7 +163,6 @@ class ClipboardManager: ObservableObject {
 
     private func saveToFavorites(index: Int) {
         guard index >= 0, index <= 4 else {
-            print("Index out of bounds (0-4 allowed)")
             return
         }
         ClipboardUtils.simulateCopy()

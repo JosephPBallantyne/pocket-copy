@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		5849EA242D3D945600261DFC /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 5849EA232D3D945600261DFC /* KeyboardShortcuts */; };
+		58CFF6942DFE112200FCFE3D /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 58CFF6932DFE111600FCFE3D /* README.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -28,6 +29,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		58CFF6932DFE111600FCFE3D /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		58D145332CBF0F8300D35D15 /* PocketCopy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PocketCopy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		58D145442CBF0F8400D35D15 /* PocketCopyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PocketCopyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		58D1454E2CBF0F8400D35D15 /* PocketCopyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PocketCopyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -80,6 +82,7 @@
 		58D1452A2CBF0F8300D35D15 = {
 			isa = PBXGroup;
 			children = (
+				58CFF6932DFE111600FCFE3D /* README.md */,
 				58D145352CBF0F8300D35D15 /* PocketCopy */,
 				58D145472CBF0F8400D35D15 /* PocketCopyTests */,
 				58D145512CBF0F8400D35D15 /* PocketCopyUITests */,
@@ -221,6 +224,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				58CFF6942DFE112200FCFE3D /* README.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
