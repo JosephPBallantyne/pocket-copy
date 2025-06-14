@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		5849EA242D3D945600261DFC /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 5849EA232D3D945600261DFC /* KeyboardShortcuts */; };
 		58CFF6942DFE112200FCFE3D /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 58CFF6932DFE111600FCFE3D /* README.md */; };
+		58CFF6962DFE182400FCFE3D /* screenshot.png in Resources */ = {isa = PBXBuildFile; fileRef = 58CFF6952DFE182400FCFE3D /* screenshot.png */; };
+		58CFF6982DFE18C300FCFE3D /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 58CFF6972DFE18BF00FCFE3D /* .gitignore */; };
+		58CFF69A2DFE191F00FCFE3D /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = 58CFF6992DFE191B00FCFE3D /* LICENSE */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -30,6 +33,9 @@
 
 /* Begin PBXFileReference section */
 		58CFF6932DFE111600FCFE3D /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		58CFF6952DFE182400FCFE3D /* screenshot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = screenshot.png; sourceTree = "<group>"; };
+		58CFF6972DFE18BF00FCFE3D /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
+		58CFF6992DFE191B00FCFE3D /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		58D145332CBF0F8300D35D15 /* PocketCopy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PocketCopy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		58D145442CBF0F8400D35D15 /* PocketCopyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PocketCopyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		58D1454E2CBF0F8400D35D15 /* PocketCopyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PocketCopyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -83,6 +89,9 @@
 			isa = PBXGroup;
 			children = (
 				58CFF6932DFE111600FCFE3D /* README.md */,
+				58CFF6952DFE182400FCFE3D /* screenshot.png */,
+				58CFF6972DFE18BF00FCFE3D /* .gitignore */,
+				58CFF6992DFE191B00FCFE3D /* LICENSE */,
 				58D145352CBF0F8300D35D15 /* PocketCopy */,
 				58D145472CBF0F8400D35D15 /* PocketCopyTests */,
 				58D145512CBF0F8400D35D15 /* PocketCopyUITests */,
@@ -224,6 +233,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				58CFF69A2DFE191F00FCFE3D /* LICENSE in Resources */,
+				58CFF6982DFE18C300FCFE3D /* .gitignore in Resources */,
+				58CFF6962DFE182400FCFE3D /* screenshot.png in Resources */,
 				58CFF6942DFE112200FCFE3D /* README.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

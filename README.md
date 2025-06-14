@@ -10,7 +10,6 @@ A minimal clipboard manager for macOS that lives in your menu bar.
 - ⭐ Save up to 5 favorites with keyboard shortcuts
 - ⌨️ Global keyboard shortcuts for quick access
 - 🎯 Minimal and fast
-- 🌓 Supports dark/light mode
 
 ## Installation
 

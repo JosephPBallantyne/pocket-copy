@@ -1,0 +1,10 @@
+# macOS
+.DS_Store
+
+# Xcode
+xcuserdata/
+*.xcworkspace/xcshareddata/
+
+# Build products (if you don't want to commit them)
+build/
+DerivedData/
