@@ -15,7 +15,7 @@ A minimal clipboard manager for macOS that lives in your menu bar.
 
 ## Installation
 
-1. Download the latest version from [Releases](https://github.com/josephpballantyne/PocketCopy/releases)
+1. Download the latest version from [Releases](https://github.com/josephpballantyne/pocket-copy/releases)
 2. Unzip `PocketCopy.zip`
 3. Drag `PocketCopy.app` to your Applications folder
 4. Right-click and select "Open" (first time only, due to macOS security)
